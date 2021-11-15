@@ -9,7 +9,7 @@ class Extended(BaseModel):
     # client_sale: Union[int, float, None] = Field(alias="clientSale")
     # client_price: Union[int, float, None] = Field(alias="clientPriceU")
     promo_sale: Union[int, float, None] = Field(alias="promoSale")
-    promo_price: Union[int, float, None] = Field(alias="promoPriceU")
+    promo_price: int = Field(alias="promoPriceU", default=0)
 
 
 class Color(BaseModel):
