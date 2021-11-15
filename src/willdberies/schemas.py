@@ -6,13 +6,15 @@ from pydantic import BaseModel, Field
 class Extended(BaseModel):
     basic_sale: Union[int, float, None] = Field(alias="basicSale")
     basic_price_u: Union[int, float, None] = Field(alias="basicPriceU")
-    client_sale: Union[int, float, None] = Field(alias="clientSale")
-    client_price: Union[int, float, None] = Field(alias="clientPriceU")
+    # client_sale: Union[int, float, None] = Field(alias="clientSale")
+    # client_price: Union[int, float, None] = Field(alias="clientPriceU")
+    promo_sale: Union[int, float, None] = Field(alias="promoSale")
+    promo_price: Union[int, float, None] = Field(alias="promoPriceU")
 
 
 class Color(BaseModel):
     name: Union[str]
-    _id: int = Field(alias="id")
+    color_id: int = Field(alias="id")
 
 
 class Stock(BaseModel):
@@ -27,7 +29,7 @@ class Size(BaseModel):
 
 
 class Product(BaseModel):
-    _id: int = Field(alias="id")
+    product_id: int = Field(alias="id")
     name: str = None
     brand: str = None
     brand_id: int = Field(alias="brandId")
@@ -38,6 +40,7 @@ class Product(BaseModel):
     rating: Union[int, None]
     feedbacks: Union[int, None]
     colors: List[Color]
+    sizes: List[Size]
 
 
 # class BaseProduct(BaseModel):

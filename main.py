@@ -1,4 +1,4 @@
-from willdberies import parse_object
+from src.willdberies import parse_object
 
 
 def main():
