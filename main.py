@@ -1,14 +1,17 @@
 import asyncio
 import time
 
-from src.willdberies import get_products_id
+from src.willdberies import gather_data, get_products_id
 
 
 def main():
     start_time = time.monotonic()
-    asyncio.run(get_products_id())
+    asyncio.run(gather_data())
     print(f"Потрачено времени: {(time.monotonic() - start_time) / 60} минут")
+    # print(get_products_id())
 
 
 if __name__ == '__main__':
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main())
     main()

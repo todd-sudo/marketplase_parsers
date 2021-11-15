@@ -1,1 +1,1 @@
-from .parser import get_products_id
+from .parser import get_products_id, gather_data

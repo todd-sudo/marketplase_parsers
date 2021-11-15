@@ -1,7 +1,9 @@
 import asyncio
 import json
+import time
 
 import aiohttp
+import requests
 
 from . import exceptions
 from .schemas.product_schema import Object
@@ -85,57 +87,70 @@ async def parse_object(product_id: str) -> dict:
                 "orig_name": size.orig_name,
             })
 
-        obj = {
-            "url": f"https://www.wildberries.ru/catalog/{id_product}/detail.aspx",
-            "id_product": id_product,
-            "name": name,
-            "brand": brand,
-            "brand_id": brand_id,
-            "details": details,
-            "price_u": price_u or None,
-            "sale": sale or None,
-            "sale_price": sale_price or None,
-            "rating": rating,
-            "feedbacks": feedbacks or None,
-            "basic_sale": basic_sale or None,
-            "basic_price_u": basic_price_u or None,
-            "promo_sale": promo_sale,
-            "promo_price": promo_price,
-            "colors": colors or None,
-            "sizes": sizes or None,
-            "stocks": stocks,
-            "sellers": sellers,
-            "images": images
-        }
+    obj = {
+        "url": f"https://www.wildberries.ru/catalog/{id_product}/detail.aspx",
+        "id_product": id_product,
+        "name": name,
+        "brand": brand,
+        "brand_id": brand_id,
+        "details": details,
+        "price_u": price_u or None,
+        "sale": sale or None,
+        "sale_price": sale_price or None,
+        "rating": rating,
+        "feedbacks": feedbacks or None,
+        "basic_sale": basic_sale or None,
+        "basic_price_u": basic_price_u or None,
+        "promo_sale": promo_sale,
+        "promo_price": promo_price,
+        "colors": colors or None,
+        "sizes": sizes or None,
+        "stocks": stocks,
+        "sellers": sellers,
+        "images": images
+    }
 
     return obj
     # with open("main.json", "w") as file:
     #     json.dump(obj, file, indent=4, ensure_ascii=False)
 
 
-async def get_products_id():
+def get_products_id():
     """ Получает id продукта и запускает таску на его парсинг
 
     https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?&page=1
     """
+    cookies = {
+        "route": "9a6e46e657afc0f176219b811ea62cfb7831e040",
+        "_wbauid": "10518923071634993703",
+        "BasketUID": "fea0678a-4fad-4c2a-9c40-ac485c5e0667"
+    }
+    
     url = "https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?&page=1"
-    async with aiohttp.ClientSession(headers=headers) as session:
-        res = await session.get(url=url, headers=headers, max_redirects=30)
-        if res.status != 200:
-            raise exceptions.StatusCodeError(f"Status code {res.status} != 200")
-        data = await res.text()
-        print(data)
-        result_json = json.loads(data)
-        result = Data(**result_json)
 
-        products = list()
+    # async with aiohttp.ClientSession() as session:
+    res = requests.get(url=url)
+    if res.status_code != 200:
+        raise exceptions.StatusCodeError(f"Status code {res.status} != 200")
+    result = Data(**res.json())
 
-        product_count = result.value.model.pager_model.paging_info.current_page_size
+    ids = list()
 
-        for pr_id in result.value.model.products:
-            obj = await parse_object(str(pr_id))
-            products.append(obj)
-            print(f"{pr_id} - {len(products)}/{product_count}")
-            await asyncio.sleep(2)
+    product_count = result.value.data.model.pager_model.paging_info.current_page_size
 
-    return products
+    for pr_id in result.value.data.model.products[:10]:
+        ids.append(str(pr_id.product_id))
+        print(f"{pr_id.product_id} - {len(ids)}/{product_count}")
+        time.sleep(2)
+
+    return ids
+
+
+async def gather_data():
+    products = list()
+    ids = get_products_id()
+    for pr_id in ids:
+        product = await parse_object(pr_id)
+        products.append(product)
+    with open("main.json", "w") as file:
+        json.dump(products, file, indent=4, ensure_ascii=False)

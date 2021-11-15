@@ -23,8 +23,12 @@ class Model(BaseModel):
     products: List[IDProduct]
 
 
-class Value(BaseModel):
+class MainData(BaseModel):
     model: Model
+
+
+class Value(BaseModel):
+    data: MainData
 
 
 class Data(BaseModel):
