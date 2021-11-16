@@ -18,7 +18,12 @@ class IDProduct(BaseModel):
     product_id: Optional[int] = Field(alias="nmId")
 
 
+class CategoryInfo(BaseModel):
+    info: Optional[str] = Field(alias="statisticFieldsJson")
+
+
 class Model(BaseModel):
+    category_info: List[CategoryInfo] = Field(alias="advGoods")
     pager_model: PagerModel = Field(alias="pagerModel")
     products: List[IDProduct]
 
@@ -33,3 +38,8 @@ class Value(BaseModel):
 
 class Data(BaseModel):
     value: Value
+
+
+class CategoryData(BaseModel):
+    position: Union[int, str, None]
+    subject_id: Union[int, str, None] = Field(alias="subjectId")

@@ -3,13 +3,24 @@ from typing import List, Union
 from pydantic import BaseModel, Field
 
 
-class Extended(BaseModel):
-    basic_sale: Union[int, float, None] = Field(alias="basicSale")
-    basic_price_u: Union[int, float, None] = Field(alias="basicPriceU")
+class BModel(BaseModel):
+    class Config:
+        @classmethod
+        def alias_generator(cls, string: str) -> str:
+            # this is the same as `alias_generator = to_camel`
+            # sample_field => sampleField
+            first, *l = string.split("_")
+            s = [first] + [word.capitalize() for word in l]
+            return "".join(s)
+
+
+class Extended(BModel):
+    basic_sale: int = 0
+    basic_price_u: int = 0
     # client_sale: Union[int, float, None] = Field(alias="clientSale")
     # client_price: Union[int, float, None] = Field(alias="clientPriceU")
-    promo_sale: Union[int, float, None] = Field(alias="promoSale")
-    promo_price: int = Field(alias="promoPriceU", default=0)
+    promo_sale: int = 0
+    promo_price: int = 0
 
 
 class Color(BaseModel):
@@ -35,8 +46,8 @@ class Product(BaseModel):
     brand_id: int = Field(alias="brandId")
     price_u: Union[int, float] = Field(alias="priceU")
     sale: Union[int, float] = None
-    sale_price: Union[int, float] = Field(alias="salePriceU")
-    extended: Extended
+    sale_price: Union[int, float] = Field(alias="salePriceU", default=None)
+    extended: Extended = None
     rating: Union[int, None]
     feedbacks: Union[int, None]
     colors: List[Color]

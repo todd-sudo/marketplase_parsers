@@ -69,12 +69,18 @@ async def get_detail_info_for_product(
     async with session.get(url=url, headers=headers, cookies=cookies) as res:
         html = await res.text()
         soup = BeautifulSoup(html, "lxml")
-        full_name = soup.find(class_="same-part-kt__header").text.strip()
+        try:
+            full_name = soup.find(class_="same-part-kt__header").text.strip()
+        except Exception as e:
+            full_name = ""
         composition = soup.find(
             class_="collapsable__content j-consist"
         ).text.strip()
-        description = soup.find(class_="j-description")\
-            .find(class_="collapsable__text").text.strip()
+        try:
+            description = soup.find(class_="j-description")\
+                .find(class_="collapsable__text").text.strip()
+        except Exception as e:
+            description = ""
 
         # specifications
         table = soup.find(class_="product-params__table")
@@ -92,3 +98,29 @@ async def get_detail_info_for_product(
         "specifications": specifications
     }
     return detail
+
+
+async def get_name_warehouse(wh_id: int):
+    """ Возвращает имя склада по его id
+    """
+    wh_name = ""
+    if wh_id == 117501:
+        wh_name = "Подольск"
+    elif wh_id == 507:
+        wh_name = "Коледино"
+    elif wh_id in [121709, 120769]:
+        wh_name = "Электросталь"
+    elif wh_id == 2737:
+        wh_name = "Санкт-Петербург"
+    elif wh_id in [130744, 1699]:
+        wh_name = "Краснодар"
+    elif wh_id == 117986:
+        wh_name = "Казань"
+    elif wh_id == 1733:
+        wh_name = "Екатеринбург"
+    elif wh_id == 686:
+        wh_name = "Новосибирск"
+    elif wh_id == 1193:
+        wh_name = "Хабаровск"
+    return wh_name
+

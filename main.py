@@ -8,7 +8,6 @@ def main():
     start_time = time.monotonic()
     asyncio.run(gather_data())
     print(f"Потрачено времени: {(time.monotonic() - start_time) / 60} минут")
-    # print(get_products_id())
 
 
 if __name__ == '__main__':
