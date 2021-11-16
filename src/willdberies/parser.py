@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os.path
 import time
 
 import aiohttp
@@ -13,8 +12,12 @@ from .utils import (
     generate_links_image,
     get_sellers,
     get_detail_info_for_product,
-    get_name_warehouse
+    get_name_warehouse,
+    save_data_json,
+    get_pagination
 )
+from ..core.utils import check_folders
+from ..core.logger import logger
 
 
 headers = {
@@ -38,8 +41,6 @@ async def parse_object(
         product_id: str, place_on_page: int, category_info
 ) -> dict:
     """ Парсит продукт по product_id и возвращает список продуктов
-
-    https://wbxcatalog-ru.wildberries.ru/nm-2-card/catalog?spp=3&lang=ru&curr=rub&offlineBonus=0&onlineBonus=0&emp=0&locale=ru&nm=41446918&xsubject=11
     """
     url = f"https://wbxcatalog-ru.wildberries.ru/nm-2-card/catalog?" \
           f"spp=3&lang=ru&curr=rub&offlineBonus=0&onlineBonus=" \
@@ -48,6 +49,7 @@ async def parse_object(
     async with aiohttp.ClientSession() as session:
         res = await session.get(url=url, headers=headers)
         if res.status != 200:
+            logger.error(f"Status code {res.status} != 200")
             raise exceptions.StatusCodeError(
                 f"Status code {res.status} != 200"
             )
@@ -90,11 +92,6 @@ async def parse_object(
             promo_price = product.extended.promo_price / 100
         except AttributeError:
             promo_price = 0
-
-        # basic_sale = product.extended.basic_sale
-        # basic_price_u = product.extended.basic_price_u / 100
-        # promo_sale = product.extended.promo_sale
-        # promo_price = product.extended.promo_price / 100
 
         for color in product.colors:
             color_name = color.name or None
@@ -155,6 +152,7 @@ def get_products_id(page: int):
           f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page={page}"
     res = requests.get(url=url)
     if res.status_code != 200:
+        logger.error(f"Status code {res.status_code} != 200")
         raise exceptions.StatusCodeError(
             f"Status code {res.status_code} != 200"
         )
@@ -172,31 +170,30 @@ def get_products_id(page: int):
         })
 
     ids = list()
-
-    product_count = result.value.data.model.pager_model.paging_info.current_page_size
     for pr_id in result.value.data.model.products:
         ids.append(str(pr_id.product_id))
-        print(f"{pr_id.product_id} - {len(ids)}/{product_count}")
         time.sleep(2)
 
     return ids, list_category
 
 
+@logger.catch
 async def gather_data():
     """Запускает сбор данных"""
     products = list()
-    ids, list_categories = get_products_id(page=1)
+    page = get_pagination()
+    ids, list_categories = get_products_id(page=page)
     place_on_page = 1
     for pr_id in ids:
-        print(pr_id)
-        print(place_on_page)
         product = await parse_object(pr_id, place_on_page, list_categories)
         products.append(product)
         place_on_page += 1
         await asyncio.sleep(1)
 
-    path = "data"
-    if not os.path.exists(path):
-        os.mkdir(path)
-    with open("data/main.json", "w") as file:
-        json.dump(products, file, indent=4, ensure_ascii=False)
+    path = "data/wildberries"
+    check_folders(path)
+    save_data_json(
+        products=products,
+        path=path,
+        filename="wb"
+    )

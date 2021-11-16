@@ -1,13 +1,8 @@
-import asyncio
-import time
-
-from src.willdberies import gather_data, get_products_id
+from src.services import run_parser_wb
 
 
 def main():
-    start_time = time.monotonic()
-    asyncio.run(gather_data())
-    print(f"Потрачено времени: {(time.monotonic() - start_time) / 60} минут")
+    run_parser_wb()
 
 
 if __name__ == '__main__':

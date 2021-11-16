@@ -1,11 +1,15 @@
 import json
+from datetime import datetime
 from typing import Union
 
 import aiohttp
+import requests
 from bs4 import BeautifulSoup
 
+from . import exceptions
+from .schemas.list_product_schema import Data
 from .schemas.sellers_schema import Supplier
-
+from ..core import logger
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -124,3 +128,22 @@ async def get_name_warehouse(wh_id: int):
         wh_name = "Хабаровск"
     return wh_name
 
+
+def get_pagination() -> int:
+    """Возвращает число стариниц"""
+    url = f"https://www.wildberries.ru/" \
+          f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1"
+    res = requests.get(url=url)
+    if res.status_code != 200:
+        logger.error(f"Status code {res.status_code} != 200")
+        raise exceptions.StatusCodeError(
+            f"Status code {res.status_code} != 200"
+        )
+    result = Data(**res.json())
+    return result.value.data.model.pager_model.paging_info.total_pages
+
+
+def save_data_json(products: list, path: str, filename: str):
+    current_datetime = datetime.now().strftime("%d.%m.%Y | %H:%M:%S")
+    with open(f"{path}/{filename}_{current_datetime}.json", "w") as file:
+        json.dump(products, file, indent=4, ensure_ascii=False)
