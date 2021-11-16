@@ -104,7 +104,7 @@ async def get_detail_info_for_product(
     return detail
 
 
-async def get_name_warehouse(wh_id: int):
+def get_name_warehouse(wh_id: int):
     """ Возвращает имя склада по его id
     """
     wh_name = ""

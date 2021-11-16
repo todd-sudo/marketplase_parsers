@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+from typing import Union
 
 import aiohttp
 import requests
@@ -38,10 +39,11 @@ headers = {
 
 
 async def parse_object(
-        product_id: str, place_on_page: int, category_info
+        product_id: str, place_on_page: Union[int, str], category_info
 ) -> dict:
     """ Парсит продукт по product_id и возвращает список продуктов
     """
+
     url = f"https://wbxcatalog-ru.wildberries.ru/nm-2-card/catalog?" \
           f"spp=3&lang=ru&curr=rub&offlineBonus=0&onlineBonus=" \
           f"0&emp=0&locale=ru&nm={product_id}"
@@ -61,9 +63,7 @@ async def parse_object(
         response_json = json.loads(response)
         data = Object(**response_json)
 
-        colors = list()
-        sizes = list()
-        stocks = list()
+
 
         product = data.data.products[0]
         id_product = product.product_id or None
@@ -92,22 +92,26 @@ async def parse_object(
             promo_price = product.extended.promo_price / 100
         except AttributeError:
             promo_price = 0
+        colors = list()
 
         for color in product.colors:
             color_name = color.name or None
             color_id = color.color_id or None
             colors.append({"name": color_name, "color_id": color_id})
+        sizes = list()
 
         for size in product.sizes:
+            stocks = list()
             for stock in size.stocks:
                 warehouse = stock.warehouse or None
-                wh_name = await get_name_warehouse(warehouse)
+                wh_name = get_name_warehouse(warehouse)
                 qty = stock.qty or None
                 stocks.append({
                     "warehouse": warehouse,
                     "qty": qty,
                     "warehouse_name": wh_name
                 })
+                break
 
             sizes.append({
                 "size_name": size.name or None,
@@ -125,15 +129,15 @@ async def parse_object(
             "brand": brand,
             "brand_id": brand_id,
             "details": details,
-            "rating": rating,
-            "price_u": price_u,
-            "sale": sale,
-            "sale_price": sale_price,
-            "basic_sale": basic_sale,
-            "basic_price_u": basic_price_u,
-            "promo_sale": promo_sale,
-            "promo_price": promo_price,
-            "count_feedbacks": count_feedbacks or None,
+            "рейтинг": rating,
+            "цена": price_u,
+            "общая_скидка": sale,
+            "цена_продажи": sale_price,
+            "скидка": basic_sale,
+            "цена_со_скидкой": basic_price_u,
+            "промокод": promo_sale,
+            "цена_с_промокодом": promo_price,
+            "количество_отзывов": count_feedbacks or None,
             "colors": colors or None,
             "sizes": sizes or None,
             "sellers": sellers,
@@ -146,10 +150,13 @@ async def parse_object(
 
 def get_products_id(page: int):
     """ Получает id продукта и запускает таску на его парсинг
+
+        https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
+
     """
 
-    url = f"https://www.wildberries.ru/" \
-          f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page={page}"
+    url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
+          f"odezhda/bryuki-i-shorty/?page={page}?sort=popular"
     res = requests.get(url=url)
     if res.status_code != 200:
         logger.error(f"Status code {res.status_code} != 200")
@@ -170,7 +177,7 @@ def get_products_id(page: int):
         })
 
     ids = list()
-    for pr_id in result.value.data.model.products:
+    for pr_id in result.value.data.model.products[:20]:
         ids.append(str(pr_id.product_id))
         time.sleep(2)
 
@@ -182,12 +189,11 @@ async def gather_data():
     """Запускает сбор данных"""
     products = list()
     page = get_pagination()
-    ids, list_categories = get_products_id(page=page)
+    ids, list_categories = get_products_id(page=1)
     place_on_page = 1
     for pr_id in ids:
         product = await parse_object(pr_id, place_on_page, list_categories)
         products.append(product)
-        place_on_page += 1
         await asyncio.sleep(1)
 
     path = "data/wildberries"
