@@ -63,8 +63,6 @@ async def parse_object(
         response_json = json.loads(response)
         data = Object(**response_json)
 
-
-
         product = data.data.products[0]
         id_product = product.product_id or None
         category_name = product.name or None
@@ -104,14 +102,13 @@ async def parse_object(
             stocks = list()
             for stock in size.stocks:
                 warehouse = stock.warehouse or None
-                wh_name = get_name_warehouse(warehouse)
-                qty = stock.qty or None
+                wh_name = get_name_warehouse(warehouse) or ""
+                qty = stock.qty or 0
                 stocks.append({
                     "warehouse": warehouse,
                     "qty": qty,
                     "warehouse_name": wh_name
                 })
-                break
 
             sizes.append({
                 "size_name": size.name or None,
@@ -152,7 +149,7 @@ def get_products_id(page: int):
     """ Получает id продукта и запускает таску на его парсинг
 
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
-
+1699
     """
 
     url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
@@ -177,7 +174,7 @@ def get_products_id(page: int):
         })
 
     ids = list()
-    for pr_id in result.value.data.model.products[:20]:
+    for pr_id in result.value.data.model.products[:6]:
         ids.append(str(pr_id.product_id))
         time.sleep(2)
 
@@ -191,10 +188,10 @@ async def gather_data():
     page = get_pagination()
     ids, list_categories = get_products_id(page=1)
     place_on_page = 1
-    for pr_id in ids:
-        product = await parse_object(pr_id, place_on_page, list_categories)
-        products.append(product)
-        await asyncio.sleep(1)
+    # for pr_id in ids:
+    product = await parse_object("33844157", place_on_page, list_categories)
+    products.append(product)
+    await asyncio.sleep(1)
 
     path = "data/wildberries"
     check_folders(path)
