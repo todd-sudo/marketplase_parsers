@@ -177,27 +177,40 @@ def get_products_id(page: int):
     # тут
     for pr_id in result.value.data.model.products:
         ids.append(str(pr_id.product_id))
-        time.sleep(2)
-
     return ids, list_category
 
 
 @logger.catch
 async def gather_data():
     """Запускает сбор данных"""
+    path = "data/wildberries"
+    temp_path = f"{path}/temp"
+    check_folders(path)
+    check_folders(temp_path)
     products = list()
     page = get_pagination()
-    ids, list_categories = get_products_id(page=page)
-    place_on_page = 1
-    for pr_id in ids:
-        product = await parse_object(pr_id, place_on_page, list_categories)
-        products.append(product)
-        await asyncio.sleep(1)
+    try:
+        ids, list_categories = get_products_id(page=page)
+        place_on_page = 1
+        for pr_id in ids:
+            product = await parse_object(pr_id, place_on_page, list_categories)
+            products.append(product)
+            place_on_page += 1
+            if len(products) % 100 == 0:
+                save_data_json(
+                    products=products,
+                    path=temp_path,
+                    filename="temp",
+                    flag="a"
+                )
 
-    path = "data/wildberries"
-    check_folders(path)
-    save_data_json(
-        products=products,
-        path=path,
-        filename="wb"
-    )
+            await asyncio.sleep(2)
+
+        save_data_json(
+            products=products,
+            path=path,
+            filename="wb",
+            flag="w"
+        )
+    except Exception as e:
+        send_message(f"{e}\nУпал по неизвестной ошибке! Убиваемся")

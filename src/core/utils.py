@@ -1,4 +1,5 @@
 import os
+import time
 
 import requests
 
@@ -20,3 +21,4 @@ def send_message(message: str):
             f'https://api.telegram.org/bot{TG_TOKEN}'
             f'/sendmessage?chat_id={admin}&text={message}'
         )
+        time.sleep(1)
