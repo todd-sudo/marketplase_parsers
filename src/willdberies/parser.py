@@ -160,7 +160,7 @@ def get_products_id():
     for p in range(page):
         if p == 0:
             continue
-        print(p)
+        print(f"Page - {p}")
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
               f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
         res = requests.get(url=url, proxies=proxies)
@@ -184,7 +184,7 @@ def get_products_id():
                     "subject_id": category_data.subject_id or None
                 })
 
-        for pr_id in result.value.data.model.products[:3]:
+        for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
 
         path_id = "data/wildberries/ids"
