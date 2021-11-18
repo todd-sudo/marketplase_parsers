@@ -174,7 +174,8 @@ def get_products_id(page: int):
         })
 
     ids = list()
-    for pr_id in result.value.data.model.products[:6]:
+    # тут
+    for pr_id in result.value.data.model.products:
         ids.append(str(pr_id.product_id))
         time.sleep(2)
 
