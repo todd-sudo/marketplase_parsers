@@ -21,7 +21,6 @@ from .utils import (
 from ..core.utils import check_folders, send_message
 from ..core.logger import logger
 
-
 headers = {
     "Host": "wbxcatalog-ru.wildberries.ru",
     "Connection": "keep-alive",
@@ -53,7 +52,8 @@ async def parse_object(
         res = await session.get(url=url, headers=headers)
         if res.status != 200:
             logger.error(f"Status code {res.status} != 200")
-            send_message(f"Status code {res.status} != 200\nВозиожно получен бан!")
+            send_message(
+                f"Status code {res.status} != 200\nВозиожно получен бан!")
             raise exceptions.StatusCodeError(
                 f"Status code {res.status} != 200"
             )
@@ -151,16 +151,18 @@ def get_products_id(page: int):
     """ Получает id продукта и запускает таску на его парсинг
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
+    ids = list()
     for p in range(page):
         if p == 0:
             continue
         print(p)
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
-            f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
+              f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
         res = requests.get(url=url)
         if res.status_code != 200:
             logger.error(f"Status code {res.status_code} != 200")
-            send_message(f"Status code {res.status_code} != 200\nВозможно получен бан!")
+            send_message(
+                f"Status code {res.status_code} != 200\nВозможно получен бан!")
             raise exceptions.StatusCodeError(
                 f"Status code {res.status_code} != 200"
             )
@@ -169,7 +171,7 @@ def get_products_id(page: int):
 
         list_category = list()
         categories = result.value.data.model.category_info or None
-        if categories != None:
+        if categories is not None:
             for c in categories:
                 json_data = json.loads(c.info)
                 category_data = CategoryData(**json_data)
@@ -178,8 +180,6 @@ def get_products_id(page: int):
                     "subject_id": category_data.subject_id or None
                 })
 
-        ids = list()
-        # тут
         for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
 

@@ -109,9 +109,9 @@ def get_name_warehouse(wh_id: int):
     """
     wh_name = ""
     if wh_id == 117501:
-        wh_name = "Подольск"
-    elif wh_id == 507:
         wh_name = "Коледино"
+    elif wh_id == 507:
+        wh_name = "Подольск"
     elif wh_id in [121709, 120769, 120762]:
         wh_name = "Электросталь"
     elif wh_id == 2737:
