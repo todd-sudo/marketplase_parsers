@@ -157,6 +157,7 @@ def get_products_id():
     ids = list()
     list_category = list()
     page = get_pagination()
+    print(f"Pages - {page}")
     for p in range(page):
         if p == 0:
             continue
