@@ -145,6 +145,6 @@ def get_pagination() -> int:
 
 
 def save_data_json(products: list, path: str, filename: str, flag: str):
-    current_datetime = datetime.now().strftime("%d.%m.%Y__%H:%M:%S")
+    current_datetime = datetime.now().strftime("%d.%m.%Y__%H.%M.%S")
     with open(f"{path}/{filename}_{current_datetime}.json", f"{flag}") as file:
         json.dump(products, file, indent=4, ensure_ascii=False)

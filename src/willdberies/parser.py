@@ -150,12 +150,13 @@ async def parse_object(
     return obj
 
 
-def get_products_id(page: int):
+def get_products_id():
     """ Получает id продукта и запускает таску на его парсинг
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
     ids = list()
     list_category = list()
+    page = get_pagination()
     for p in range(page):
         if p == 0:
             continue
@@ -183,26 +184,42 @@ def get_products_id(page: int):
                     "subject_id": category_data.subject_id or None
                 })
 
-        for pr_id in result.value.data.model.products:
+        for pr_id in result.value.data.model.products[:3]:
             ids.append(str(pr_id.product_id))
 
+        path_id = "data/wildberries/ids"
+        path_category = "data/wildberries/category"
+        check_folders(path_id)
+        check_folders(path_category)
+        with open(f"{path_id}/id.json", "a") as file:
+            json.dump(ids, file, indent=4, ensure_ascii=False)
+
+        with open(f"{path_category}/category.json", "a") as file:
+            json.dump(list_category, file, indent=4, ensure_ascii=False)
         time.sleep(random.randint(3, 6))
-    return ids, list_category
+        return len(ids)
 
 
 @logger.catch
 async def gather_data():
     """Запускает сбор данных"""
+    path_id = "data/wildberries/ids"
+    path_category = "data/wildberries/category"
     path = "data/wildberries"
     temp_path = f"{path}/temp"
     check_folders(path)
     check_folders(temp_path)
     products = list()
-    page = get_pagination()
-    print(page)
+
     try:
-        ids, list_categories = get_products_id(page=page)
-        print(len(ids))
+        len_ids = get_products_id()
+        print(len_ids)
+
+        with open(f"{path_id}/id.json", "r") as file:
+            ids = json.load(file)
+        with open(f"{path_category}/category.json", "r") as file:
+            list_categories = json.load(file)
+
         place_on_page = 1
         for pr_id in ids:
             product = await parse_object(pr_id, place_on_page, list_categories)

@@ -18,7 +18,6 @@ def parse_category():
     response = requests.get(url=url, headers=headers)
     urls = list()
     result = response.json()
-    # result = json.loads(result_json)
     categories = result.get("value").get("menu")
     for category in categories:
         try:
