@@ -17,7 +17,7 @@ from .utils import (
     save_data_json,
     get_pagination
 )
-from ..core.utils import check_folders
+from ..core.utils import check_folders, send_message
 from ..core.logger import logger
 
 
@@ -52,6 +52,7 @@ async def parse_object(
         res = await session.get(url=url, headers=headers)
         if res.status != 200:
             logger.error(f"Status code {res.status} != 200")
+            send_message(f"Status code {res.status} != 200\nВозиожно получен бан!")
             raise exceptions.StatusCodeError(
                 f"Status code {res.status} != 200"
             )
@@ -147,9 +148,7 @@ async def parse_object(
 
 def get_products_id(page: int):
     """ Получает id продукта и запускает таску на его парсинг
-
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
-1699
     """
 
     url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
@@ -157,6 +156,7 @@ def get_products_id(page: int):
     res = requests.get(url=url)
     if res.status_code != 200:
         logger.error(f"Status code {res.status_code} != 200")
+        send_message(f"Status code {res.status_code} != 200\nВозможно получен бан!")
         raise exceptions.StatusCodeError(
             f"Status code {res.status_code} != 200"
         )
@@ -186,12 +186,12 @@ async def gather_data():
     """Запускает сбор данных"""
     products = list()
     page = get_pagination()
-    ids, list_categories = get_products_id(page=1)
+    ids, list_categories = get_products_id(page=page)
     place_on_page = 1
-    # for pr_id in ids:
-    product = await parse_object("33844157", place_on_page, list_categories)
-    products.append(product)
-    await asyncio.sleep(1)
+    for pr_id in ids:
+        product = await parse_object(pr_id, place_on_page, list_categories)
+        products.append(product)
+        await asyncio.sleep(1)
 
     path = "data/wildberries"
     check_folders(path)
