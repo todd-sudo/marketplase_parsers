@@ -10,7 +10,7 @@ from . import exceptions
 from .schemas.list_product_schema import Data
 from .schemas.sellers_schema import Supplier
 from ..core import logger
-from ..core.settings import proxies, proxy
+# from ..core.settings import proxies, proxy
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -71,7 +71,7 @@ async def get_detail_info_for_product(
         "BasketUID": "538c7d14-121b-4b0c-9a70-bf14810a00e2"
     }
     url = f"https://www.wildberries.ru/catalog/{product_id}/detail.aspx"
-    async with session.get(url=url, headers=headers, cookies=cookies, proxy=proxy) as res:
+    async with session.get(url=url, headers=headers, cookies=cookies) as res:
         html = await res.text()
         soup = BeautifulSoup(html, "lxml")
         try:
@@ -134,7 +134,7 @@ def get_pagination() -> int:
     """Возвращает число стариниц"""
     url = f"https://www.wildberries.ru/" \
           f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1"
-    res = requests.get(url=url, proxies=proxies)
+    res = requests.get(url=url)
     if res.status_code != 200:
         logger.error(f"Status code {res.status_code} != 200")
         raise exceptions.StatusCodeError(

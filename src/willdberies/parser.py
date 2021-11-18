@@ -19,7 +19,7 @@ from .utils import (
     save_data_json,
     get_pagination
 )
-from ..core.settings import proxies, proxy
+# from ..core.settings import proxies, proxy
 from ..core.utils import check_folders, send_message
 from ..core.logger import logger
 
@@ -52,7 +52,7 @@ async def parse_object(
           f"0&emp=0&locale=ru&nm={product_id}"
 
     async with aiohttp.ClientSession() as session:
-        res = await session.get(url=url, headers=headers, proxy=proxy)
+        res = await session.get(url=url, headers=headers)  # , proxy=proxy
         if res.status != 200:
             logger.error(f"Status code {res.status} != 200")
             send_message(
@@ -158,13 +158,13 @@ def get_products_id():
     list_category = list()
     page = get_pagination()
     print(f"Pages - {page}")
-    for p in range(page):
+    for p in range(5):
         if p == 0:
             continue
         print(f"Page - {p}")
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
               f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
-        res = requests.get(url=url, proxies=proxies)
+        res = requests.get(url=url)
         if res.status_code != 200:
             logger.error(f"Status code {res.status_code} != 200")
             send_message(
@@ -188,17 +188,18 @@ def get_products_id():
         for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
 
-        path_id = "data/wildberries/ids"
-        path_category = "data/wildberries/category"
-        check_folders(path_id)
-        check_folders(path_category)
-        with open(f"{path_id}/id.json", "a") as file:
-            json.dump(ids, file, indent=4, ensure_ascii=False)
-
-        with open(f"{path_category}/category.json", "a") as file:
-            json.dump(list_category, file, indent=4, ensure_ascii=False)
         time.sleep(random.randint(3, 6))
-        return len(ids)
+
+    path_id = "data/wildberries/ids"
+    path_category = "data/wildberries/category"
+    check_folders(path_id)
+    check_folders(path_category)
+    with open(f"{path_id}/id.json", "w") as file:
+        json.dump(ids, file, indent=4, ensure_ascii=False)
+
+    with open(f"{path_category}/category.json", "w") as file:
+        json.dump(list_category, file, indent=4, ensure_ascii=False)
+    return len(ids)
 
 
 @logger.catch
@@ -214,7 +215,7 @@ async def gather_data():
 
     try:
         len_ids = get_products_id()
-        print(len_ids)
+        print(f"Len IDS - {len_ids}")
 
         with open(f"{path_id}/id.json", "r") as file:
             ids = json.load(file)
@@ -223,6 +224,7 @@ async def gather_data():
 
         place_on_page = 1
         for pr_id in ids:
+            print(f"Parse {pr_id}")
             product = await parse_object(pr_id, place_on_page, list_categories)
             products.append(product)
             place_on_page += 1
@@ -233,9 +235,9 @@ async def gather_data():
                     filename="temp",
                     flag="a"
                 )
-
+            print(f"Good {pr_id}")
             await asyncio.sleep(random.randint(2, 5))
-
+        print("save data")
         save_data_json(
             products=products,
             path=path,
@@ -243,7 +245,7 @@ async def gather_data():
             flag="w"
         )
     except Exception as e:
-        print(e)
+        logger.error(e)
         send_message(f"{e}\nУпал по неизвестной ошибке! Убиваемся")
     else:
         send_message("ВСЕ ЗАЕБИСЬ")
