@@ -168,14 +168,15 @@ def get_products_id(page: int):
         result = Data(**res.json())
 
         list_category = list()
-        categories = result.value.data.model.category_info
-        for c in categories:
-            json_data = json.loads(c.info)
-            category_data = CategoryData(**json_data)
-            list_category.append({
-                "position": category_data.position,
-                "subject_id": category_data.subject_id
-            })
+        categories = result.value.data.model.category_info or None
+        if categories != None:
+            for c in categories:
+                json_data = json.loads(c.info)
+                category_data = CategoryData(**json_data)
+                list_category.append({
+                    "position": category_data.position or None,
+                    "subject_id": category_data.subject_id or None
+                })
 
         ids = list()
         # тут

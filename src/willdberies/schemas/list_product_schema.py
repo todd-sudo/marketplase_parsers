@@ -23,7 +23,7 @@ class CategoryInfo(BaseModel):
 
 
 class Model(BaseModel):
-    category_info: List[CategoryInfo] = Field(alias="advGoods")
+    category_info: List[CategoryInfo] = Field(alias="advGoods", default="")
     pager_model: PagerModel = Field(alias="pagerModel")
     products: List[IDProduct]
 

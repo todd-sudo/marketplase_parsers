@@ -24,7 +24,7 @@ class Extended(BModel):
 
 
 class Color(BaseModel):
-    name: Union[str]
+    name: Union[str, None]
     color_id: int = Field(alias="id")
 
 
@@ -36,7 +36,7 @@ class Stock(BaseModel):
 class Size(BaseModel):
     name: str = None
     orig_name: str = Field(alias="origName")
-    stocks: Union[List[Stock]]
+    stocks: Union[List[Stock], None]
 
 
 class Product(BaseModel):
