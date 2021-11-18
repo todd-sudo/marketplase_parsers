@@ -1,6 +1,6 @@
 import asyncio
 import json
-from os import pardir, readlink
+import random
 import time
 from typing import Union
 
@@ -182,7 +182,7 @@ def get_products_id(page: int):
         for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
 
-        time.sleep(2)
+        time.sleep(random.randint(3, 6))
     return ids, list_category
 
 
@@ -212,7 +212,7 @@ async def gather_data():
                     flag="a"
                 )
 
-            await asyncio.sleep(2)
+            await asyncio.sleep(random.randint(2, 5))
 
         save_data_json(
             products=products,
