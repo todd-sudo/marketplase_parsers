@@ -152,6 +152,8 @@ def get_products_id(page: int):
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
     for p in range(page):
+        if p == 0:
+            continue
         print(p)
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
             f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
@@ -221,3 +223,5 @@ async def gather_data():
     except Exception as e:
         print(e)
         send_message(f"{e}\nУпал по неизвестной ошибке! Убиваемся")
+    else:
+        send_message("ВСЕ ЗАЕБИСЬ")
