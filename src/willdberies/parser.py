@@ -1,6 +1,6 @@
 import asyncio
 import json
-from os import pardir
+from os import pardir, readlink
 import time
 from typing import Union
 
@@ -151,33 +151,34 @@ def get_products_id(page: int):
     """ Получает id продукта и запускает таску на его парсинг
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
+    for p in range(page):
+        print(p)
+        url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
+            f"odezhda/bryuki-i-shorty/?page={page}?sort=popular"
+        res = requests.get(url=url)
+        if res.status_code != 200:
+            logger.error(f"Status code {res.status_code} != 200")
+            send_message(f"Status code {res.status_code} != 200\nВозможно получен бан!")
+            raise exceptions.StatusCodeError(
+                f"Status code {res.status_code} != 200"
+            )
 
-    url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
-          f"odezhda/bryuki-i-shorty/?page={page}?sort=popular"
-    res = requests.get(url=url)
-    if res.status_code != 200:
-        logger.error(f"Status code {res.status_code} != 200")
-        send_message(f"Status code {res.status_code} != 200\nВозможно получен бан!")
-        raise exceptions.StatusCodeError(
-            f"Status code {res.status_code} != 200"
-        )
+        result = Data(**res.json())
 
-    result = Data(**res.json())
+        list_category = list()
+        categories = result.value.data.model.category_info
+        for c in categories:
+            json_data = json.loads(c.info)
+            category_data = CategoryData(**json_data)
+            list_category.append({
+                "position": category_data.position,
+                "subject_id": category_data.subject_id
+            })
 
-    list_category = list()
-    categories = result.value.data.model.category_info
-    for c in categories:
-        json_data = json.loads(c.info)
-        category_data = CategoryData(**json_data)
-        list_category.append({
-            "position": category_data.position,
-            "subject_id": category_data.subject_id
-        })
-
-    ids = list()
-    # тут
-    for pr_id in result.value.data.model.products:
-        ids.append(str(pr_id.product_id))
+        ids = list()
+        # тут
+        for pr_id in result.value.data.model.products:
+            ids.append(str(pr_id.product_id))
     return ids, list_category
 
 
