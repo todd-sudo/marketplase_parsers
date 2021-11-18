@@ -194,6 +194,7 @@ async def gather_data():
     print(page)
     try:
         ids, list_categories = get_products_id(page=page)
+        print(len(ids))
         place_on_page = 1
         for pr_id in ids:
             product = await parse_object(pr_id, place_on_page, list_categories)
