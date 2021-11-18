@@ -154,7 +154,7 @@ def get_products_id(page: int):
     for p in range(page):
         print(p)
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
-            f"odezhda/bryuki-i-shorty/?page={page}?sort=popular"
+            f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
         res = requests.get(url=url)
         if res.status_code != 200:
             logger.error(f"Status code {res.status_code} != 200")
@@ -179,6 +179,8 @@ def get_products_id(page: int):
         # тут
         for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
+
+        time.sleep(2)
     return ids, list_category
 
 
