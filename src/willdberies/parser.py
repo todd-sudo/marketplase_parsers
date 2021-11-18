@@ -7,6 +7,7 @@ from typing import Union
 import aiohttp
 import requests
 
+
 from . import exceptions
 from .schemas.product_schema import Object
 from .schemas.list_product_schema import Data, CategoryData
@@ -18,8 +19,10 @@ from .utils import (
     save_data_json,
     get_pagination
 )
+from ..core.settings import proxies, proxy
 from ..core.utils import check_folders, send_message
 from ..core.logger import logger
+
 
 headers = {
     "Host": "wbxcatalog-ru.wildberries.ru",
@@ -49,7 +52,7 @@ async def parse_object(
           f"0&emp=0&locale=ru&nm={product_id}"
 
     async with aiohttp.ClientSession() as session:
-        res = await session.get(url=url, headers=headers)
+        res = await session.get(url=url, headers=headers, proxy=proxy)
         if res.status != 200:
             logger.error(f"Status code {res.status} != 200")
             send_message(
@@ -152,13 +155,14 @@ def get_products_id(page: int):
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
     ids = list()
+    list_category = list()
     for p in range(page):
         if p == 0:
             continue
         print(p)
         url = f"https://www.wildberries.ru/catalogdata/zhenshchinam/" \
               f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
-        res = requests.get(url=url)
+        res = requests.get(url=url, proxies=proxies)
         if res.status_code != 200:
             logger.error(f"Status code {res.status_code} != 200")
             send_message(
@@ -169,7 +173,6 @@ def get_products_id(page: int):
 
         result = Data(**res.json())
 
-        list_category = list()
         categories = result.value.data.model.category_info or None
         if categories is not None:
             for c in categories:
