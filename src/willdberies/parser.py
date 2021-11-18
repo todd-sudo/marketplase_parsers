@@ -1,5 +1,6 @@
 import asyncio
 import json
+from os import pardir
 import time
 from typing import Union
 
@@ -189,6 +190,7 @@ async def gather_data():
     check_folders(temp_path)
     products = list()
     page = get_pagination()
+    print(page)
     try:
         ids, list_categories = get_products_id(page=page)
         place_on_page = 1
@@ -213,4 +215,5 @@ async def gather_data():
             flag="w"
         )
     except Exception as e:
+        print(e)
         send_message(f"{e}\nУпал по неизвестной ошибке! Убиваемся")
