@@ -244,10 +244,11 @@ async def gather_data():
                     filename="temp",
                     flag="a"
                 )
+                send_message(f"Товаров спаршено: {len(products)} из {len(ids)}")
             print(f"Good {pr_id}")
             await asyncio.sleep(random.randint(2, 5))
             index += 1
-        print("save data")
+
         save_data_json(
             products=products,
             path=path,
@@ -258,4 +259,5 @@ async def gather_data():
         logger.error(e)
         send_message(f"{e}\nУпал по неизвестной ошибке! Убиваемся")
     else:
+        print("save data")
         send_message("ВСЕ ЗАЕБИСЬ")
