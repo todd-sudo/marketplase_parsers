@@ -1,7 +1,9 @@
-import json
+from src.ozon.utils import get_category
 
 
-with open("/home/todd/big.json") as file:
-    objects = json.load(file)
+def main():
+    get_category()
 
-print(len(objects))
+
+if __name__ == '__main__':
+    main()
