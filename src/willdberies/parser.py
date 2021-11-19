@@ -157,7 +157,13 @@ def get_products_id():
     """
     ids = list()
 
+    path_id = "data/wildberries/ids"
+    path_category = "data/wildberries/category"
+    check_folders(path_id)
+    check_folders(path_category)
+
     page = get_pagination()
+
     print(f"Pages - {page}")
     for p in range(page):
         list_category = list()
@@ -177,30 +183,27 @@ def get_products_id():
 
         result = Data(**res.json())
 
-        categories = result.value.data.model.category_info or None
-        if categories is not None:
-            for c in categories:
-                json_data = json.loads(c.info)
-                category_data = CategoryData(**json_data)
-                list_category.append({
-                    "position": category_data.position or None,
-                    "subject_id": category_data.subject_id or None
-                })
+        if p == 1:
+            categories = result.value.data.model.category_info or None
+            if categories is not None:
+                for c in categories:
+                    json_data = json.loads(c.info)
+                    category_data = CategoryData(**json_data)
+                    list_category.append({
+                        "position": category_data.position or None,
+                        "subject_id": category_data.subject_id or None
+                    })
+            with open(f"{path_category}/category.json", "w") as file:
+                json.dump(list_category, file, indent=4, ensure_ascii=False)
 
         for pr_id in result.value.data.model.products:
             ids.append(str(pr_id.product_id))
 
         time.sleep(random.randint(3, 6))
 
-    path_id = "data/wildberries/ids"
-    path_category = "data/wildberries/category"
-    check_folders(path_id)
-    check_folders(path_category)
     with open(f"{path_id}/id.json", "w") as file:
         json.dump(ids, file, indent=4, ensure_ascii=False)
 
-    with open(f"{path_category}/category.json", "w") as file:
-        json.dump(list_category, file, indent=4, ensure_ascii=False)
     return len(ids)
 
 
@@ -219,6 +222,8 @@ async def gather_data():
         len_ids = []
         if not os.path.exists(f"{path_id}/id.json"):
             len_ids = get_products_id()
+
+        print(f"Len IDS - {len_ids}")
 
         with open(f"{path_id}/id.json", "r") as file:
             ids = json.load(file)
