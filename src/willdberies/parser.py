@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os.path
 import random
 import time
 from typing import Union
@@ -56,13 +57,13 @@ async def parse_object(
         if res.status != 200:
             logger.error(f"Status code {res.status} != 200")
             send_message(
-                f"Status code {res.status} != 200\nВозиожно получен бан!")
+                f"Status code {res.status} != 200\nВозможно получен бан!")
             raise exceptions.StatusCodeError(
                 f"Status code {res.status} != 200"
             )
         images = await generate_links_image(product_id, session)
         sellers = await get_sellers(product_id, session)
-        details = await get_detail_info_for_product(product_id, session)
+        # details = await get_detail_info_for_product(product_id, session)
 
         response = await res.text()
         response_json = json.loads(response)
@@ -130,7 +131,7 @@ async def parse_object(
             "category_name": category_name,
             "brand": brand,
             "brand_id": brand_id,
-            "details": details,
+            # "details": details,
             "рейтинг": rating,
             "цена": price_u,
             "общая_скидка": sale,
@@ -155,10 +156,11 @@ def get_products_id():
         https://www.wildberries.ru/catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1
     """
     ids = list()
-    list_category = list()
+
     page = get_pagination()
     print(f"Pages - {page}")
     for p in range(page):
+        list_category = list()
         if p == 0:
             continue
         print(f"Page - {p}")
@@ -214,8 +216,9 @@ async def gather_data():
     products = list()
 
     try:
-        len_ids = get_products_id()
-        print(f"Len IDS - {len_ids}")
+        len_ids = []
+        if not os.path.exists(f"{path_id}/id.json"):
+            len_ids = get_products_id()
 
         with open(f"{path_id}/id.json", "r") as file:
             ids = json.load(file)
