@@ -231,8 +231,9 @@ async def gather_data():
             list_categories = json.load(file)
 
         place_on_page = 1
+        index = 1
         for pr_id in ids:
-            print(f"Parse {pr_id}")
+            print(f"Parse {pr_id}| {index}/{len(ids)}")
             product = await parse_object(pr_id, place_on_page, list_categories)
             products.append(product)
             place_on_page += 1
@@ -245,6 +246,7 @@ async def gather_data():
                 )
             print(f"Good {pr_id}")
             await asyncio.sleep(random.randint(2, 5))
+            index += 1
         print("save data")
         save_data_json(
             products=products,
