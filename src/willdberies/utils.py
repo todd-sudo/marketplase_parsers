@@ -30,11 +30,11 @@ async def generate_links_image(
             continue
         url = f"https://images.wbstatic.net/big" \
               f"/new/{gen_id}/{product_id}-{i}.jpg"
-        response = await async_request(session=session, url=url)
-        if response.status == 200:
-            urls.append(url)
-        else:
-            break
+        async with session.get(url=url) as response:
+            if response.status == 200:
+                urls.append(url)
+            else:
+                break
     return urls
 
 
@@ -47,8 +47,7 @@ async def get_sellers(
     url = f"https://wbx-content-v2.wbstatic.net/sellers/" \
           f"{product_id}.json?locale=ru"
     response = await async_request(session=session, url=url)
-    res = await response.text()
-    r = json.loads(res)
+    r = json.loads(response)
     data = Supplier(**r)
     objects.append({
         "supplier_id": data.supplier_id or None,
@@ -73,8 +72,8 @@ async def get_detail_info_for_product(
     res = await async_request(
         session=session, url=url, headers=headers, cookies=cookies
     )
-    html = await res.text()
-    soup = BeautifulSoup(html, "lxml")
+
+    soup = BeautifulSoup(res, "lxml")
     try:
         full_name = soup.find(class_="same-part-kt__header").text.strip()
     except Exception as e:
@@ -136,8 +135,7 @@ async def get_pagination(session: aiohttp.ClientSession) -> int:
     url = f"https://www.wildberries.ru/" \
           f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1"
     response = await async_request(session=session, url=url)
-    res_text = await response.text()
-    res = json.loads(res_text)
+    res = json.loads(response)
     result = Data(**res)
     return result.value.data.model.pager_model.paging_info.total_pages
 

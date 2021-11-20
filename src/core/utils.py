@@ -28,19 +28,21 @@ def send_message(message: str):
 async def async_request(
         session: aiohttp.ClientSession,
         url: str, *,
-        headers: dict = None,
-        cookies: dict = None
+        headers=None,
+        cookies=None
 ):
+    if headers is None:
+        headers = {}
+    if cookies is None:
+        cookies = {}
+
     for proxy in random.sample(proxy_list, len(proxy_list)):
-        res = await session.get(
+        async with session.get(
             url=url, headers=headers, cookies=cookies, proxy=proxy
-        )
-        if res.status != 200:
-            logger.error(f"Status code {res.status} != 200|Proxy: {proxy}")
-            # send_message(
-            #     f"Status code {res.status} != 200\n"
-            #     f"Возможно получен бан!\nProxy: {proxy}\nДелаю замену..."
-            # )
-            continue
-        return res
+        ) as res:
+            print(res.status)
+            if res.status != 200:
+                logger.error(f"Status code {res.status} != 200|Proxy: {proxy}")
+                continue
+            return await res.text()
 

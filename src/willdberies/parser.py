@@ -22,19 +22,11 @@ from ..core.logger import logger
 
 
 headers = {
-    "Host": "wbxcatalog-ru.wildberries.ru",
-    "Connection": "keep-alive",
     "Accept": "application/json, text/javascript, */*; q=0.01",
     "User-Agent": "Mozilla/5.0 (Linux; Android 10; SAMSUNG SM-A205FN) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
                   "SamsungBrowser/15.0 "
                   "Chrome/90.0.4430.210 Mobile Safari/537.36",
-    "Origin": "https://www.wildberries.ru",
-    "Sec-Fetch-Site": "same-site",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Dest": "empty",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
 }
 
 
@@ -43,7 +35,7 @@ async def parse_object(
         place_on_page: Union[int, str],
         category_info,
         session: aiohttp.ClientSession
-) -> dict:
+):
     """ Парсит продукт по product_id и возвращает список продуктов
     """
 
@@ -51,12 +43,11 @@ async def parse_object(
           f"spp=3&lang=ru&curr=rub&offlineBonus=0&onlineBonus=" \
           f"0&emp=0&locale=ru&nm={product_id}"
 
-    res = await async_request(session=session, url=url, headers=headers)
+    response = await async_request(session=session, url=url, headers=headers)
     images = await generate_links_image(product_id, session)
     # sellers = await get_sellers(product_id, session)
     # details = await get_detail_info_for_product(product_id, session)
 
-    response = await res.text()
     response_json = json.loads(response)
     data = Object(**response_json)
 
@@ -162,8 +153,7 @@ async def get_products_id(session: aiohttp.ClientSession):
               f"odezhda/bryuki-i-shorty/?page={p}?sort=popular"
 
         response = await async_request(session=session, url=url)
-        res_text = await response.text()
-        res = json.loads(res_text)
+        res = json.loads(response)
         result = Data(**res)
 
         if p == 1:
@@ -179,7 +169,7 @@ async def get_products_id(session: aiohttp.ClientSession):
             with open(f"{path_category}/category.json", "w") as file:
                 json.dump(list_category, file, indent=4, ensure_ascii=False)
 
-        for pr_id in result.value.data.model.products:
+        for pr_id in result.value.data.model.products[:3]:
             ids.append(str(pr_id.product_id))
         await asyncio.sleep(1)
 
