@@ -3,14 +3,12 @@ from datetime import datetime
 from typing import Union
 
 import aiohttp
-import requests
 from bs4 import BeautifulSoup
 
-from . import exceptions
 from .schemas.list_product_schema import Data
 from .schemas.sellers_schema import Supplier
-from ..core import logger
-# from ..core.settings import proxies, proxy
+from ..core.utils import async_request
+
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -23,7 +21,8 @@ headers = {
 async def generate_links_image(
         product_id: Union[int, str], session: aiohttp.ClientSession
 ):
-    """Генерирует ссылку на изображение продукта"""
+    """ Генерирует ссылку на изображение продукта
+    """
     gen_id = product_id[:4] + "0000"
     urls = list()
     for i in range(20):
@@ -31,33 +30,33 @@ async def generate_links_image(
             continue
         url = f"https://images.wbstatic.net/big" \
               f"/new/{gen_id}/{product_id}-{i}.jpg"
-        async with session.get(url=url, headers=headers) as response:
-            if response.status == 200:
-                urls.append(url)
-            else:
-                break
-            # time.sleep(2)
+        response = await async_request(session=session, url=url)
+        if response.status == 200:
+            urls.append(url)
+        else:
+            break
     return urls
 
 
 async def get_sellers(
         product_id: Union[str, int], session: aiohttp.ClientSession
 ):
-    """Получает поставщика"""
+    """ Получает поставщика
+    """
     objects = list()
     url = f"https://wbx-content-v2.wbstatic.net/sellers/" \
           f"{product_id}.json?locale=ru"
-    async with session.get(url=url, headers=headers) as response:
-        res = await response.text()
-        r = json.loads(res)
-        data = Supplier(**r)
-        objects.append({
-            "supplier_id": data.supplier_id or None,
-            "supplier_name": data.supplier_name or None,
-            "inn": data.inn or None,
-            "ogrn": data.ogrn or None,
-            "address": data.address or None
-        })
+    response = await async_request(session=session, url=url)
+    res = await response.text()
+    r = json.loads(res)
+    data = Supplier(**r)
+    objects.append({
+        "supplier_id": data.supplier_id or None,
+        "supplier_name": data.supplier_name or None,
+        "inn": data.inn or None,
+        "ogrn": data.ogrn or None,
+        "address": data.address or None
+    })
     return objects
 
 
@@ -71,30 +70,32 @@ async def get_detail_info_for_product(
         "BasketUID": "538c7d14-121b-4b0c-9a70-bf14810a00e2"
     }
     url = f"https://www.wildberries.ru/catalog/{product_id}/detail.aspx"
-    async with session.get(url=url, headers=headers, cookies=cookies) as res:
-        html = await res.text()
-        soup = BeautifulSoup(html, "lxml")
-        try:
-            full_name = soup.find(class_="same-part-kt__header").text.strip()
-        except Exception as e:
-            full_name = ""
-        composition = soup.find(
-            class_="collapsable__content j-consist"
-        ).text.strip()
-        try:
-            description = soup.find(class_="j-description")\
-                .find(class_="collapsable__text").text.strip()
-        except Exception as e:
-            description = ""
+    res = await async_request(
+        session=session, url=url, headers=headers, cookies=cookies
+    )
+    html = await res.text()
+    soup = BeautifulSoup(html, "lxml")
+    try:
+        full_name = soup.find(class_="same-part-kt__header").text.strip()
+    except Exception as e:
+        full_name = ""
+    composition = soup.find(
+        class_="collapsable__content j-consist"
+    ).text.strip()
+    try:
+        description = soup.find(class_="j-description")\
+            .find(class_="collapsable__text").text.strip()
+    except Exception as e:
+        description = ""
 
-        # specifications
-        table = soup.find(class_="product-params__table")
-        trs = table.find_all(class_="product-params__row")
-        specifications = list()
-        for tr in trs:
-            key = tr.find("th").text.strip()
-            value = tr.find("td").text.strip()
-            specifications.append({key: value})
+    # specifications
+    table = soup.find(class_="product-params__table")
+    trs = table.find_all(class_="product-params__row")
+    specifications = list()
+    for tr in trs:
+        key = tr.find("th").text.strip()
+        value = tr.find("td").text.strip()
+        specifications.append({key: value})
 
     detail = {
         "full_name": full_name,
@@ -130,21 +131,18 @@ def get_name_warehouse(wh_id: int):
     return wh_name
 
 
-def get_pagination() -> int:
+async def get_pagination(session: aiohttp.ClientSession) -> int:
     """Возвращает число стариниц"""
     url = f"https://www.wildberries.ru/" \
           f"catalogdata/zhenshchinam/odezhda/bryuki-i-shorty/?page=1"
-    res = requests.get(url=url)
-    if res.status_code != 200:
-        logger.error(f"Status code {res.status_code} != 200")
-        raise exceptions.StatusCodeError(
-            f"Status code {res.status_code} != 200"
-        )
-    result = Data(**res.json())
+    response = await async_request(session=session, url=url)
+    res_text = await response.text()
+    res = json.loads(res_text)
+    result = Data(**res)
     return result.value.data.model.pager_model.paging_info.total_pages
 
 
-def save_data_json(products: list, path: str, filename: str, flag: str):
+async def save_data_json(products: list, path: str, filename: str, flag: str):
     current_datetime = datetime.now().strftime("%d.%m.%Y__%H.%M.%S")
     with open(f"{path}/{filename}_{current_datetime}.json", f"{flag}") as file:
         json.dump(products, file, indent=4, ensure_ascii=False)
