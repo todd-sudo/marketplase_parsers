@@ -53,8 +53,8 @@ async def parse_object(
 
     res = await async_request(session=session, url=url, headers=headers)
     images = await generate_links_image(product_id, session)
-    sellers = await get_sellers(product_id, session)
-    details = await get_detail_info_for_product(product_id, session)
+    # sellers = await get_sellers(product_id, session)
+    # details = await get_detail_info_for_product(product_id, session)
 
     response = await res.text()
     response_json = json.loads(response)
@@ -122,7 +122,7 @@ async def parse_object(
             "category_name": category_name,
             "brand": brand,
             "brand_id": brand_id,
-            "details": details,
+            # "details": details,
             "рейтинг": rating,
             "цена": price_u,
             "общая_скидка": sale,
@@ -134,7 +134,7 @@ async def parse_object(
             "количество_отзывов": count_feedbacks or None,
             "colors": colors or None,
             "sizes": sizes or None,
-            "sellers": sellers,
+            # "sellers": sellers,
             "images": images
         }
     }
