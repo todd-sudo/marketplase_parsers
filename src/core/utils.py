@@ -37,12 +37,16 @@ async def async_request(
         cookies = {}
 
     for proxy in random.sample(proxy_list, len(proxy_list)):
-        async with session.get(
-            url=url, headers=headers, cookies=cookies, proxy=proxy
-        ) as res:
-            print(res.status)
-            if res.status != 200:
-                logger.error(f"Status code {res.status} != 200|Proxy: {proxy}")
-                continue
-            return await res.text()
+        try:
+            async with session.get(
+                url=url, headers=headers, cookies=cookies, proxy=proxy
+            ) as res:
+                print(res.status)
+                if res.status != 200:
+                    logger.error(f"Status code {res.status} != 200|Proxy: {proxy}")
+                    continue
+                return await res.text()
+        except Exception as e:
+            logger.error(e)
+            continue
 

@@ -14,5 +14,5 @@ proxy_list = [
     "http://2JNWsE:3KDskA@77.83.8.187:8000",
 ]
 
-start = 7000
+start = 7920
 finish = -1
